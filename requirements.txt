@@ -1,0 +1,9 @@
+numpy
+gensim
+pandas
+scipy
+networkx
+tqdm
+torch>=1.0
+dgl>=2.0
+
