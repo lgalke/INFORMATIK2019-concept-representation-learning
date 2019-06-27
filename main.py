@@ -26,7 +26,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from dgl.contrib.sampling.sampler import NeighborSampler
-from utils import save_embedding
 
 from data import PAPER_TYPE, SUBJECT_TYPE, load_data
 from gensim.models import Word2Vec
@@ -54,6 +53,14 @@ MDS = {
     "ccount_file": "cumulative_counts.csv",
     "checkpoints_dir": "checkpoints"
 }
+
+
+def save_embedding(labels, embedding, outfile):
+    """ Saves an embedding given by (unique) labels and vectors to outfile """
+    print("Dumping embeddings to", outfile)
+    df = pd.DataFrame(data=embedding, index=labels)
+    df.to_csv(outfile, index=True,header=False)
+
 
 def preprocess_text(args, data):
     """ Preprocess text """
@@ -110,7 +117,7 @@ def embed_control_variate(args, data):
     print(subject_vs)
     print(len(subject_vs))
 
-    print("Nxgraph")
+    print("Networkx graph")
     print("Number of nodes:", data.graph.number_of_nodes())
     print("Number of edges:", data.graph.number_of_edges())
 
@@ -142,10 +149,6 @@ def embed_control_variate(args, data):
     print("DGL Graph")
     print("Number of nodes:", g.number_of_nodes())
     print("Number of edges:", g.number_of_edges())
-
-    print("Is multigraph:",g.is_multigraph())
-    print("Setting zero initializer")
-    g.set_n_initializer(dgl.init.zero_initializer)
 
     ### INIT 'features'
     print("Adding features")
@@ -593,7 +596,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('model',
                         choices=['lsa',
-                                 'gae',
                                  'deepwalk',
                                  'dgi',
                                  'gcn_cv_sc',
@@ -601,13 +603,11 @@ if __name__ == '__main__':
                         help="Select model for representation learning")
     parser.add_argument('graphdir',
                         help='path to graph dir')
-    parser.add_argument('--min-count', type=int, default=5,
-                        help="Minimum count for words")
     parser.add_argument('--max-features', type=int, default=50000,
                         help="Vocabulary size for words")
-    parser.add_argument('--max-length', type=int, default=None,
+    parser.add_argument('--max-length', type=int, default=50,
                         help="Maximum word count of titles")
-    parser.add_argument('-s', '--representation-size', type=int, default=32,
+    parser.add_argument('-s', '--representation-size', type=int, default=128,
                         help="Target embedding dimension")
 
     parser.add_argument('--lr', type=float, default=1e-3,
@@ -616,7 +616,7 @@ if __name__ == '__main__':
                         help="Weight decay")
     parser.add_argument('-o', '--out',
                         help='Output directory')
-    parser.add_argument('--epochs', default=200, type=int,
+    parser.add_argument('--epochs', default=400, type=int,
                         help="Number of epochs")
     parser.add_argument('--no-cuda', dest='use_cuda', default=True,
                         action='store_false',
@@ -628,24 +628,24 @@ if __name__ == '__main__':
     parser.add_argument("--workers", default=4, type=int, help="CPU workers for Deepwalk")
 
     # Batching specific
-    parser.add_argument("--batch-size", default=32, type=int, help="Batch size for training")
+    parser.add_argument("--batch-size", default=128, type=int, help="Batch size for training")
     parser.add_argument("--test-batch-size", default=None, type=int, help="Batch size for testing")
 
     # Text Embedding specific
-    parser.add_argument('--embedding-dim', type=int, default=64,
+    parser.add_argument('--embedding-dim', type=int, default=256,
                         help="Text embedding dimension")
     parser.add_argument('--embedding-dropout', type=float, default=0,
                         help="Text embedding dimension")
     parser.add_argument("--max-norm", default=None, help="Max norm for text embedding", type=float)
 
     # Sampling specific
-    parser.add_argument("--num-neighbors", default=2, type=int,
+    parser.add_argument("--num-neighbors", default=5, type=int,
                         help="How many neighbors to sample in each layer")
 
     # GCN specific
     parser.add_argument("--n-layers", default=2, type=int,
                         help="How many GCN layers to use")
-    parser.add_argument("--n-hidden", default=16, type=int,
+    parser.add_argument("--n-hidden", default=128, type=int,
                         help="How many GCN layers to use")
     parser.add_argument("--dropout", default=0.5, type=float,
                         help="Dropout factor within GCN layers")
