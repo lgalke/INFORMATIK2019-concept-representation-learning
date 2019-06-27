@@ -25,9 +25,10 @@ A graph directory `graph_dir` with three csv files:
 # Usage
 
 
-```python3 main.py gcn_cv_sc graph_dir```
+```python3 train.py gcn_cv_sc graph_dir -o model_dir```
 
 For more information on hyperparameters, consult `python3 main.py -h`.
+Then you can evaluate the resulting embedding `model_dir/embedding.csv` with the scripts `cluster.py` and `classify.py`.
 
 # Contributing
 

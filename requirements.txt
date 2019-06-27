@@ -7,4 +7,5 @@ tqdm
 sklearn
 torch>=1.0
 dgl>=0.2
+matplotlib
 

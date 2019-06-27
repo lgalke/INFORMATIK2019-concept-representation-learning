@@ -36,6 +36,7 @@ from preprocessing import AlphaNumericTextPreprocessor
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
+from utils import save_embedding
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -53,13 +54,6 @@ MDS = {
     "ccount_file": "cumulative_counts.csv",
     "checkpoints_dir": "checkpoints"
 }
-
-
-def save_embedding(labels, embedding, outfile):
-    """ Saves an embedding given by (unique) labels and vectors to outfile """
-    print("Dumping embeddings to", outfile)
-    df = pd.DataFrame(data=embedding, index=labels)
-    df.to_csv(outfile, index=True,header=False)
 
 
 def preprocess_text(args, data):
@@ -616,7 +610,7 @@ if __name__ == '__main__':
                         help="Weight decay")
     parser.add_argument('-o', '--out',
                         help='Output directory')
-    parser.add_argument('--epochs', default=400, type=int,
+    parser.add_argument('--epochs', default=5, type=int,
                         help="Number of epochs")
     parser.add_argument('--no-cuda', dest='use_cuda', default=True,
                         action='store_false',
