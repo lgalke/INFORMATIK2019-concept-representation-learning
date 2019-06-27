@@ -12,30 +12,31 @@ Description: Script to run supervised experiments on bibliographic data
 import itertools as it
 import logging
 import os
-import random
 import pickle
+import random
 from collections import defaultdict
 
 import dgl
 import dgl.function as fn
 import networkx as nx
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from dgl.contrib.sampling.sampler import NeighborSampler
+from utils import save_embedding
+
+from data import PAPER_TYPE, SUBJECT_TYPE, load_data
 from gensim.models import Word2Vec
+from models.deepwalk import graph as deepwalk_graph
+from models.gcn_cv_sc import GCNSampling
+from models.lsa import LSAEmbedding, class_prototypes
+from preprocessing import AlphaNumericTextPreprocessor
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
-
-from data import PAPER_TYPE, SUBJECT_TYPE, load_data
-from models.gcn_cv_sc import GCNSampling
-from models.deepwalk import graph as deepwalk_graph
-from models.lsa import LSAEmbedding, class_prototypes
-from preprocessing import AlphaNumericTextPreprocessor
-from utils import save_embedding
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -271,14 +272,13 @@ def embed_control_variate(args, data):
         model.eval()
         decoder.eval()
         # Evaluate accuracy
-        for nf in dgl.contrib.sampling.NeighborSampler(g, args.test_batch_size,
-                                                       g.number_of_nodes(),  # expand factor
-                                                       neighbor_type='in',
-                                                       num_hops=n_layers,
-                                                       seed_nodes=subject_vs,
-                                                       add_self_loop=False,
-                                                       num_workers=args.workers,
-                                                       prefetch=True):
+        for nf in NeighborSampler(g, args.test_batch_size,
+                                  g.number_of_nodes(),  # expand factor
+                                  neighbor_type='in',
+                                  num_hops=n_layers,
+                                  seed_nodes=subject_vs,
+                                  add_self_loop=False,
+                                  num_workers=args.workers):
             # Copy data from global graph
             node_embed_names = [['features']]
             for i in range(n_layers):
@@ -320,15 +320,14 @@ def embed_control_variate(args, data):
         model.train()
         decoder.train()
         epoch_loss = 0.
-        for nf in dgl.contrib.sampling.NeighborSampler(g, args.batch_size,
-                                                       num_neighbors,
-                                                       neighbor_type='in',
-                                                       shuffle=True,
-                                                       num_hops=n_layers,
-                                                       add_self_loop=False,
-                                                       seed_nodes=subject_vs,
-                                                       num_workers=args.workers,
-                                                       prefetch=True):
+        for nf in NeighborSampler(g, args.batch_size,
+                                  num_neighbors,
+                                  neighbor_type='in',
+                                  shuffle=True,
+                                  num_hops=n_layers,
+                                  add_self_loop=False,
+                                  seed_nodes=subject_vs,
+                                  num_workers=args.workers):
             step += 1
             # Fill aggregate history from neighbors
             for i in range(n_layers):
@@ -468,17 +467,16 @@ def embed_control_variate(args, data):
         graph.ndata['norm'] = norm
 
         # For now, we only do it for subject_vs
-        for nf in dgl.contrib.sampling.NeighborSampler(graph, args.test_batch_size,
-                                                       graph.number_of_nodes(),  #expand factor
-                                                       neighbor_type='in',
-                                                       num_hops=n_layers,
-                                                       seed_nodes=node_ids,
-                                                       num_workers=args.workers,
-                                                       prefetch=True,
-                                                       add_self_loop=True):  # Self-loop required for temporal stuff
+        for nf in NeighborSampler(graph, args.test_batch_size,
+                                  graph.number_of_nodes(),  #expand factor
+                                  neighbor_type='in',
+                                  num_hops=n_layers,
+                                  seed_nodes=node_ids,
+                                  num_workers=args.workers,
+                                  add_self_loop=True):  # Self-loop required for temporal stuff
             # Copy data from global graph
             node_embed_names = [['embed']]
-            for i in range(n_layers):
+            for __ in range(n_layers):
                 node_embed_names.append(['norm'])
             nf.copy_from_parent(node_embed_names=node_embed_names)
             with torch.no_grad():
@@ -506,12 +504,7 @@ def embed_control_variate(args, data):
 
 
 def embed_deepwalk(args, data):
-
-    # BEGIN QND
-    # TODO make this program args
-    args.seed = 'seed'
-    # END QND
-
+    args.seed = 'seed'  # required by 
     epochs = args.epochs
 
     g = deepwalk_graph.from_networkx(data.graph, undirected=True)
@@ -563,19 +556,14 @@ def embed_deepwalk(args, data):
     return subject_ids, subject_embedding
 
 
-
 def embed_random(args, data):
+    """ Generates a random concept embedding """
     df_annotation = pd.read_csv(os.path.join(args.graphdir, 'annotation.csv'))
     concepts = df_annotation['subject'].unique()
     embedding = np.random.rand(len(concepts), args.representation_size)
     return concepts, embedding
 
 def main(args):
-    if args.use_cuda and not torch.cuda.is_available():
-        print("Cuda not available, falling back to CPU")
-
-
-    args.use_cuda = args.use_cuda and torch.cuda.is_available()
 
     print("Loading data...")
     data = load_data(args.graphdir, supervised=False,
@@ -694,12 +682,10 @@ if __name__ == '__main__':
                         help="Restore model checkpoint in outdir for warm start")
 
 
-    # parser.add_argument("--thesaurus", default=None, help="Thesaurus")
-
     ARGS = parser.parse_args()
     ARGS.test_batch_size = ARGS.batch_size if ARGS.test_batch_size is None else ARGS.test_batch_size
-    print(ARGS)
 
+    # Guess some default /tmp output dir if nothing specified
     if not ARGS.out:
         # Guess some tmp directory to put output
         ARGS.out = os.path.join("/tmp/",
@@ -709,4 +695,11 @@ if __name__ == '__main__':
     print("Storing outputs to", ARGS.out)
     os.makedirs(ARGS.out, exist_ok=True)
 
+
+    # Make sure cuda is available
+    if ARGS.use_cuda and not torch.cuda.is_available():
+        print("Cuda not available, falling back to CPU")
+    ARGS.use_cuda = ARGS.use_cuda and torch.cuda.is_available()
+
+    print(ARGS)
     main(ARGS)
