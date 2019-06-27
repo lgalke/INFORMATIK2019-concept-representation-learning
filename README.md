@@ -1,4 +1,11 @@
-# Installation
+# Quick start
+
+Run `make` to setup a virtual environment, download sample data, and run the experiments.
+If there are any issues, or the methods should be applied to other data, follow the detailed steps below.
+
+# Setup
+
+Set up a virtual environment (i.e. `virtualenv -p /usr/bin/python3 venv && source venv/bin/activate`) and then run:
 
 ```sh
 pip install -r requirements.txt

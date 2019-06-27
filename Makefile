@@ -1,7 +1,9 @@
+VENV_CMD="virtualenv -p /usr/bin/python3"
+
 all: experiment
 
 venv:
-	virtualenv -p /usr/bin/python3 venv
+	$(VENV_CMD) venv
 
 deps: venv
 	. venv/bin/activate && pip install -r requirements.txt
@@ -16,6 +18,6 @@ sample_data:
 
 experiment: sample_data deps
 	mkdir -p out
-	. venv/bin/activate && CUDA_VISIBLE_DEVICES=0 python3 main.py lsa data/sample --no-cuda -o out/gcn
-	. venv/bin/activate && CUDA_VISIBLE_DEVICES=0 python3 main.py deepwalk data/sample --no-cuda -o out/gcn
+	. venv/bin/activate && CUDA_VISIBLE_DEVICES=0 python3 main.py lsa data/sample --no-cuda -o out/lsa
+	. venv/bin/activate && CUDA_VISIBLE_DEVICES=0 python3 main.py deepwalk data/sample --no-cuda -o out/deepwalk
 	. venv/bin/activate && CUDA_VISIBLE_DEVICES=0 python3 main.py gcn_cv_sc data/sample --no-cuda -o out/gcn
