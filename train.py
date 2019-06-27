@@ -610,7 +610,7 @@ if __name__ == '__main__':
                         help="Weight decay")
     parser.add_argument('-o', '--out',
                         help='Output directory')
-    parser.add_argument('--epochs', default=5, type=int,
+    parser.add_argument('--epochs', default=400, type=int,
                         help="Number of epochs")
     parser.add_argument('--no-cuda', dest='use_cuda', default=True,
                         action='store_false',
