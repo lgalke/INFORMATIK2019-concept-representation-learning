@@ -11,6 +11,8 @@ Set up a virtual environment (i.e. `virtualenv -p /usr/bin/python3 venv && sourc
 pip install -r requirements.txt
 ```
 
+In case, the required packages are not backwards compatible, run `pip install -r requirements-stable.txt` instead.
+
 # Preparation
 
 A graph directory `graph_dir` with three csv files:
@@ -27,3 +29,6 @@ A graph directory `graph_dir` with three csv files:
 
 For more information on hyperparameters, consult `python3 main.py -h`.
 
+# Contributing
+
+If you are interested in contributing, please notify [us](mailto:l.galke@zbw.eu).

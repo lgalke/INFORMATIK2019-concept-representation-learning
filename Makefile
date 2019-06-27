@@ -1,4 +1,4 @@
-VENV_CMD="virtualenv -p /usr/bin/python3"
+VENV_CMD = virtualenv -p /usr/bin/python3
 
 all: experiment
 
@@ -6,7 +6,7 @@ venv:
 	$(VENV_CMD) venv
 
 deps: venv
-	. venv/bin/activate && pip install -r requirements.txt
+	. venv/bin/activate && pip install -r requirements-stable.txt
 
 
 
