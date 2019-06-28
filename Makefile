@@ -17,9 +17,12 @@ $(GOLD_FILE):
 	dirname $(GOLD_FILE) | xargs mkdir -p 
 	wget $(GOLD_URL) -O $(GOLD_FILE)
 
-fetch_sample_data:
+
+data/sample/sample.zip:
 	mkdir -p data/sample
 	wget $(DATA_URL) -O data/sample/sample.zip
+
+unzip_sample_data: data/sample/sample.zip
 	cd data/sample && unzip -u sample.zip
 
 data/sample/annotation.csv: fetch_sample_data
