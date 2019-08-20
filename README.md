@@ -34,6 +34,11 @@ A graph directory `graph_dir` with three csv files:
 For more information on hyperparameters, consult `python3 main.py -h`.
 Then you can evaluate the resulting embedding `model_dir/embedding.csv` with the scripts `cluster.py` and `classify.py`.
 
+
+## Reproduction
+
+Run `make experiment` to reproduce the experiments from the paper.
+
 ## Contributing
 
 If you are interested in contributing, please notify [us](mailto:l.galke@zbw.eu).
