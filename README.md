@@ -37,7 +37,7 @@ Then you can evaluate the resulting embedding `model_dir/embedding.csv` with the
 
 ## Reproduction
 
-Run `make experiment` to reproduce the experiments from the paper.
+Run `make experiment` to reproduce the experiments from the paper. This will download a sample of 100k research items to construct the graph.
 
 ## Contributing
 
