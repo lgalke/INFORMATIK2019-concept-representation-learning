@@ -31,21 +31,21 @@ data/sample/authorship.csv: fetch_sample_data
 
 data/sample/paper.csv: fetch_sample_data
 
-out/lsa/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/paper.csv deps
+out/lsa/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/authorship.csv deps
 	. venv/bin/activate && python3 train.py lsa data/sample --no-cuda -o out/lsa
 
 
-out/deepwalk/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/paper.csv deps
+out/deepwalk/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/authorship.csv deps
 	. venv/bin/activate && python3 train.py deepwalk data/sample --no-cuda -o out/deepwalk --epochs 5
 
 
-out/gcn/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/paper.csv deps
+out/gcn/embedding.csv: data/sample/paper.csv data/sample/annotation.csv data/sample/authorship.csv deps
 	. venv/bin/activate && python3 train.py gcn_cv_sc data/sample --no-cuda -o out/gcn --epochs 400
 
 
 eval: out/lsa/embedding.csv out/deepwalk/embedding.csv out/gcn/embedding.csv $(GOLD_FILE)
-	. venv/bin/activate && python3 cluster.py -s $(GOLD_FILE) -r 10 --normalize --plot out/lsa/embedding.csv out/deepwalk/embedding.csv out/gcn/embedding.csv
-	. venv/bin/activate && python3 classify.py $(GOLD_FILE) --cv 10 --normalize out/lsa/embedding.csv out/deepwalk/embedding.csv out/gcn/embedding.csv
+	. venv/bin/activate && python3 cluster.py -s $(GOLD_FILE) -r 10  --plot out/lsa/embedding.csv out/deepwalk/embedding.csv out/gcn/embedding.csv
+	. venv/bin/activate && python3 classify.py $(GOLD_FILE) --cv 10  out/lsa/embedding.csv out/deepwalk/embedding.csv out/gcn/embedding.csv
 
 
 experiment: eval
