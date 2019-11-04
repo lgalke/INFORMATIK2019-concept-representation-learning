@@ -1,5 +1,7 @@
 # Concept Representation Learning
 
+This repository holds the code for our [INFORMATIK 2019 paper](https://dl.gi.de/handle/20.500.12116/24973)
+
 We consider a graph of papers and concepts. Paper nodes have a title and are connected when they have at least one common author. Concept nodes are featureless. The task is to learn a representation for the featureless concept nodes.
 
 ## Quick start
